@@ -1,0 +1,17 @@
+{
+  "short_name": "StepDance!",
+  "name": "StepDance! - Rhythm Platform",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/4349/4349444.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0a0a12",
+  "theme_color": "#00f0ff",
+  "display": "standalone",
+  "orientation": "landscape"
+}

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StepDance! - Official Remake Platform</title>
+    <link rel="manifest" href="manifest.json">
+    <!-- Iconos y Fuentes Premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-weight/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0a0a12;
+            --panel-bg: rgba(20, 20, 35, 0.85);
+            --neon-blue: #00f0ff;
+            --neon-red: #ff0055;
+            --neon-green: #39ff14;
+            --text-main: #ffffff;
+            --accent-gold: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        /* DISEÑO DE INTERFAZ PREMIUM (Estilo ADOFAI / Neon) */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a3a 0%, #05050b 100%);
+            padding: 20px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        h1 span {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+        }
+
+        .btn {
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            width: 85%;
+            max-width: 350px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 25px var(--neon-blue);
+        }
+
+        .btn.premium-btn {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .btn.steam-btn {
+            border-color: #1b2838;
+            background: #171a21;
+        }
+
+        /* CUADRO DE MANTENIMIENTO / MODALES */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal {
+            background: var(--panel-bg);
+            border: 3px solid var(--neon-red);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 30px var(--neon-red);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+            50% { box-shadow: 0 0 35px rgba(255, 0, 85, 0.9); }
+            100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+        }
+
+        /* CANVAS DEL JUEGO */
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: #040408;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-shadow: 0 0 10px #fff;
+            pointer-events: none;
+        }
+
+        /* LIBRERÍAS Y PANELES */
+        .panel-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .level-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--neon-blue);
+        }
+
+        .tab-menu {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--neon-blue);
+            color: var(--neon-blue);
+            background: var(--panel-bg);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= MENÚ PRINCIPAL ================= -->
+    <div id="menuScreen" class="screen active">
+        <h1>Step<span>Dance!</span></h1>
+        <button class="btn" onclick="changeScreen('levelSelectScreen')"><i class="fas fa-play"></i> Niveles Oficiales</button>
+        <button class="btn" onclick="changeScreen('communityScreen')"><i class="fas fa-globe"></i> Librería Pública</button>
+        <button class="btn" onclick="changeScreen('steamScreen')"><i class="fab fa-steam"></i> Cuenta de Steam</button>
+        <button class="btn premium-btn" onclick="showMaintenance()"><i class="fas fa-crown" style="color: var(--accent-gold)"></i> Premium (Suscripción)</button>
+    </div>
+
+    <!-- ================= SELECCIÓN DE NIVELES PRINCIPALES ================= -->
+    <div id="levelSelectScreen" class="screen">
+        <h2>Niveles Oficiales</h2>
+        <div class="panel-container" style="margin-top:20px; margin-bottom:20px;">
+            <div class="level-card" onclick="startLevel(1)">
+                <div>
+                    <h3>Nivel 1: First Song</h3>
+                    <p style="color:#aaa; font-size:0.9rem;"><i class="fab fa-spotify" style="color:#1DB954"></i> Roga - Spotify Sync</p>
+                </div>
+                <i class="fas fa-play-circle" style="font-size:2rem; color:var(--neon-blue)"></i>
+            </div>
+            <div class="level-card" onclick="startLevel(2)">
+                <div>
+                    <h3>Nivel 2: Jax Toy Reprise</h3>
+                    <p style="color:#aaa; font-size:0.9rem;"><i class="fab fa-spotify" style="color:#1DB954"></i> JakeNeutron - Spotify Sync</p>
+                </div>
+                <i class="fas fa-play-circle" style="font-size:2rem; color:var(--neon-blue)"></i>
+            </div>
+        </div>
+        <button class="btn" onclick="changeScreen('menuScreen')">Volver</button>
+    </div>
+
+    <!-- ================= LIBRERÍAS PÚBLICAS Y PRIVADAS ================= -->
+    <div id="communityScreen" class="screen">
+        <div class="tab-menu">
+            <div id="tabPub" class="tab active" onclick="switchLibrary('public')">Librería Pública</div>
+            <div id="tabPriv" class="tab" onclick="switchLibrary('private')">Mis Listas Privadas</div>
+        </div>
+
+        <!-- Vista Pública -->
+        <div id="publicBox" class="panel-container">
+            <div class="level-card">
+                <div><h3>Clout - Custom Mix</h3><p>Por: RhythmMaster99</p></div>
+                <button class="btn" style="width:auto; padding:8px 15px; font-size:0.9rem;">Jugar</button>
+            </div>
+            <div class="level-card">
+                <div><h3>Artificial Intelligence Beat</h3><p>Generado por IA Bot</p></div>
+                <button class="btn" style="width:auto; padding:8px 15px; font-size:0.9rem;">Jugar</button>
+            </div>
+        </div>
+
+        <!-- Vista Privada (Invitaciones de Amigos) -->
+        <div id="privateBox" class="panel-container" style="display:none;">
+            <button class="btn" style="max-width:100%; width:100%; margin:0 0 15px 0; background:rgba(57, 255, 20, 0.1); border-color:var(--neon-green)" onclick="alert('Generando enlace de invitación para tus amigos...')">
+                <i class="fas fa-user-plus"></i> Invitar Amigo a esta Lista
+            </button>
+            <div class="level-card" style="border-left-color: var(--neon-green)">
+                <div><h3>Collab Privada #1</h3><p>2 creadores activos</p></div>
+                <span style="color:var(--neon-green); font-size:0.8rem;">Compartido</span>
+            </div>
+        </div>
+
+        <button class="btn" onclick="changeScreen('menuScreen')" style="margin-top:20px;">Volver</button>
+    </div>
+
+    <!-- ================= LOGIN DE STEAM ================= -->
+    <div id="steamScreen" class="screen">
+        <h2>Sincronización de Creador</h2>
+        <div class="panel-container" style="text-align:center; margin:20px 0;">
+            <i class="fab fa-steam" style="font-size:5rem; margin-bottom:15px; color:#171a21;"></i>
+            <p style="margin-bottom:20px; color:#ccc;">Inicia sesión con Steam para verificar tu perfil, publicar en la red pública y administrar tus salas privadas de amigos.</p>
+            <button class="btn steam-btn" style="width:100%; max-width:100%;" onclick="mockSteamLogin()"><i class="fab fa-steam"></i> Iniciar Sesión con Steam</button>
+        </div>
+        <button class="btn" onclick="changeScreen('menuScreen')">Volver</button>
+    </div>
+
+    <!-- ================= PANTALLA EN JUEGO (MOTOR HÍBRIDO ADOFAI + GD) ================= -->
+    <div id="gameScreen" class="screen" style="padding:0;">
+        <div class="game-ui" id="gameUi">0%</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- ================= MODAL MANTENIMIENTO (PREMIUM) ================= -->
+    <div id="maintenanceOverlay" class="overlay" onclick="hideMaintenance()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <i class="fas fa-tools" style="font-size: 3rem; color: var(--neon-red); margin-bottom: 15px;"></i>
+            <h2 style="color: #fff; margin-bottom: 10px;">EN MANTENIMIENTO!</h2>
+            <p style="color: #ccc; font-size: 0.95rem;">El sistema de suscripción Premium se encuentra actualmente bajo ajustes técnicos. Inténtalo más tarde.</p>
+            <button class="btn" onclick="hideMaintenance()" style="width:100%; margin-top:20px; border-color:var(--neon-red)">Entendido</button>
+        </div>
+    </div>
+
+    <!-- ================= MOTOR DEL JUEGO Y LÓGICA GENERAL ================= -->
+    <script>
+        // --- Navegación del Menú ---
+        function changeScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if(screenId === 'gameScreen') {
+                initGameEngine();
+            } else {
+                stopGameEngine();
+            }
+        }
+
+        function showMaintenance() {
+            document.getElementById('maintenanceOverlay').style.display = 'flex';
+        }
+
+        function hideMaintenance() {
+            document.getElementById('maintenanceOverlay').style.display = 'none';
+        }
+
+        function switchLibrary(type) {
+            if(type === 'public') {
+                document.getElementById('publicBox').style.display = 'block';
+                document.getElementById('privateBox').style.display = 'none';
+                document.getElementById('tabPub').classList.add('active');
+                document.getElementById('tabPriv').classList.remove('active');
+            } else {
+                document.getElementById('publicBox').style.display = 'none';
+                document.getElementById('privateBox').style.display = 'block';
+                document.getElementById('tabPub').classList.remove('active');
+                document.getElementById('tabPriv').classList.add('active');
+            }
+        }
+
+        function mockSteamLogin() {
+            alert("Redirigiendo a Steam WebAPI... ¡Cuenta vinculada como Creador de StepDance! exitosamente.");
+            changeScreen('menuScreen');
+        }
+
+        let currentTrack = "";
+        function startLevel(id) {
+            if(id === 1) currentTrack = "First Song - Roga";
+            if(id === 2) currentTrack = "Jax Toy Reprise - JakeNeutron";
+            changeScreen('gameScreen');
+        }
+
+        // --- MOTOR CORE: COMBINACIÓN ADOFAI + GEOMETRY DASH ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        let isPlaying = false;
+
+        // Variables de físicas de juego
+        let player = { x: 100, y: 0, angle: 0, mode: 'ADOFAI' };
+        let tiles = [];
+        let score = 0;
+        let targetTileIndex = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initGameEngine() {
+            resizeCanvas();
+            isPlaying = true;
+            score = 0;
+            targetTileIndex = 1;
+            
+            tiles = [];
+            let currentX = 150;
+            let currentY = canvas.height / 2;
+            
+            for(let i=0; i<40; i++) {
+                let mode = (i > 12 && i < 25) ? 'GD' : 'ADOFAI';
+                tiles.push({
+                    x: currentX,
+                    y: currentY,
+                    mode: mode
+                });
+                currentX += 90;
+                if(mode === 'ADOFAI' && i % 4 === 0) currentY += (Math.random() > 0.5 ? 60 : -60);
+            }
+            
+            player.x = tiles[0].x;
+            player.y = tiles[0].y;
+            player.angle = 0;
+            player.mode = 'ADOFAI';
+
+            window.addEventListener('touchstart', handleGameInput);
+            window.addEventListener('mousedown', handleGameInput);
+
+            gameLoop();
+        }
+
+        function stopGameEngine() {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrameId);
+            window.removeEventListener('touchstart', handleGameInput);
+            window.removeEventListener('mousedown', handleGameInput);
+        }
+
+        function handleGameInput(e) {
+            e.preventDefault();
+            if(!isPlaying) return;
+
+            let targetTile = tiles[targetTileIndex];
+            if(!targetTile) return;
+
+            if(player.mode === 'ADOFAI') {
+                let angleDeg = (player.angle * 180 / Math.PI) % 360;
+                
+                score = Math.floor((targetTileIndex / tiles.length) * 100);
+                document.getElementById('gameUi').innerText = `${score}% - Sincronizado con Spotify`;
+                
+                player.x = targetTile.x;
+                player.y = targetTile.y;
+                player.mode = targetTile.mode;
+                targetTileIndex++;
+            } else {
+                player.y -= 70;
+                setTimeout(() => { player.y = targetTile.y; }, 250);
+                
+                score = Math.floor((targetTileIndex / tiles.length) * 100);
+                document.getElementById('gameUi').innerText = `${score}% - Modo GD`;
+                targetTileIndex++;
+            }
+
+            if(targetTileIndex >= tiles.length) {
+                alert(`¡Nivel Completado! Canción: ${currentTrack}. Sincronización perfecta.`);
+                changeScreen('levelSelectScreen');
+            }
+        }
+
+        function gameLoop() {
+            if(!isPlaying) return;
+
+            ctx.fillStyle = '#06060c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            tiles.forEach((tile, index) => {
+                ctx.beginPath();
+                if(tile.mode === 'GD') {
+                    ctx.strokeStyle = varColor('--neon-red');
+                    ctx.fillStyle = 'rgba(255, 0, 85, 0.1)';
+                    ctx.rect(tile.x - 25, tile.y - 10, 50, 20);
+                } else {
+                    ctx.strokeStyle = varColor('--neon-blue');
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
+                    ctx.arc(tile.x, tile.y, 20, 0, Math.PI * 2);
+                }
+                ctx.lineWidth = index === targetTileIndex ? 4 : 2;
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            if(player.mode === 'ADOFAI') {
+                player.angle += 0.05;
+                let orbitX = player.x + Math.cos(player.angle) * 50;
+                let orbitY = player.y + Math.sin(player.angle) * 50;
+
+                ctx.beginPath();
+                ctx.fillStyle = varColor('--neon-red');
+                ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = varColor('--neon-red');
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = varColor('--neon-blue');
+                ctx.arc(orbitX, orbitY, 12, 0, Math.PI * 2);
+                ctx.shadowColor = varColor('--neon-blue');
+                ctx.fill();
+            } else {
+                ctx.fillStyle = varColor('--neon-green');
+                ctx.shadowColor = varColor('--neon-green');
+                ctx.shadowBlur = 20;
+                ctx.fillRect(player.x - 15, player.y - 35, 30, 30);
+                player.x += 2;
+            }
+            
+            ctx.shadowBlur = 0; 
+
+            let offsetX = (canvas.width / 4) - player.x;
+            ctx.setTransform(1, 0, 0, 1, offsetX, 0);
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+    </script>
+</body>
+</html>
